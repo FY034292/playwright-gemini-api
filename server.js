@@ -51,18 +51,24 @@ async function initializeBrowser() {
     try {
         browser = await chromium.launch({
             headless: true,
-            slowMo: 1000,
+            slowMo: 100,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu'
+                '--disable-gpu',
+                '--lang=ja-JP',
+                '--accept-lang=ja-JP'
             ]
         });
 
         const context = await browser.newContext({
             locale: 'ja-JP',
-            permissions: ['clipboard-read', 'clipboard-write']
+            timezoneId: 'Asia/Tokyo',
+            permissions: ['clipboard-read', 'clipboard-write'],
+            extraHTTPHeaders: {
+                'Accept-Language': 'ja-JP,ja;q=0.9'
+            }
         });
         page = await context.newPage();
 
@@ -82,23 +88,82 @@ async function runGeminiAutomation(prompt) {
         // ブラウザが初期化されていない場合は初期化
         const { page } = await initializeBrowser();
 
+        // プロンプト送信前の「その他」ボタン数を取得
+        const moreButtons = page.locator('[data-test-id="more-menu-button"]');
+        const initialButtonCount = await moreButtons.count();
+
         await page.getByRole('textbox', { name: 'ここにプロンプトを入力してください' }).fill(prompt);
         await page.getByRole('button', { name: 'プロンプトを送信' }).click();
-        console.log('回答を取得中...');
 
-        // 応答を待つ
-        await page.waitForTimeout(5000);
+        // MutationObserverを使用したリアルタイム応答監視
+        console.log('新しい応答の生成完了を待機中...');
 
-        // 最新の回答の「その他」ボタンを特定（最後の要素を選択）
-        const moreButtons = page.locator('[data-test-id="more-menu-button"]');
-        const buttonCount = await moreButtons.count();
+        const finalButtonCount = await page.evaluate(async (initialCount) => {
+            return new Promise((resolve, reject) => {
+                const maxWaitTime = 60000; // 60秒
+                let observer;
+                
+                // タイムアウト設定
+                const timeout = setTimeout(() => {
+                    if (observer) observer.disconnect();
+                    reject(new Error('新しい応答のボタンが表示されませんでした（タイムアウト）'));
+                }, maxWaitTime);
 
-        if (buttonCount === 0) {
+                try {
+                    // MutationObserverの設定
+                    observer = new MutationObserver((mutations) => {
+                        try {
+                            mutations.forEach((mutation) => {
+                                // 新しく追加されたノードをチェック
+                                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                                    const currentButtons = document.querySelectorAll('[data-test-id="more-menu-button"]');
+                                    const currentCount = currentButtons.length;
+                                    
+                                    // 新しいボタンが追加された場合
+                                    if (currentCount > initialCount) {
+                                        // DOM安定化待機
+                                        setTimeout(() => {
+                                            const finalCount = document.querySelectorAll('[data-test-id="more-menu-button"]').length;
+                                            if (finalCount > initialCount) {
+                                                clearTimeout(timeout);
+                                                observer.disconnect();
+                                                resolve(finalCount);
+                                            }
+                                        }, 500);
+                                    }
+                                }
+                            });
+                        } catch (error) {
+                            clearTimeout(timeout);
+                            observer.disconnect();
+                            reject(error);
+                        }
+                    });
+
+                    // 監視設定
+                    const config = {
+                        childList: true,
+                        subtree: true,
+                        attributes: true,
+                        attributeFilter: ['data-test-id', 'class']
+                    };
+
+                    // 監視開始
+                    observer.observe(document.body, config);
+                    
+                } catch (error) {
+                    clearTimeout(timeout);
+                    reject(error);
+                }
+            });
+        }, initialButtonCount);
+
+        if (finalButtonCount === 0) {
             throw new Error('「その他」ボタンが見つかりません');
         }
 
         // 最後（最新）の「その他」ボタンをクリック
-        await moreButtons.nth(buttonCount - 1).click();
+        await moreButtons.nth(finalButtonCount - 1).click();
         await page.locator('[data-test-id="copy-button"]').click();
         const copiedText = await page.evaluate(() => navigator.clipboard.readText());
 
@@ -110,7 +175,6 @@ async function runGeminiAutomation(prompt) {
 
     } catch (error) {
         console.error('テスト中にエラーが発生しました:', error);
-        // エラーが発生した場合はブラウザを再初期化
         await closeBrowser();
         throw error;
     }
