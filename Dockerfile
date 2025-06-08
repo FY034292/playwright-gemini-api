@@ -10,10 +10,6 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont
 
-# Playwrightがインストール済みのChromiumを使用するよう設定
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
 WORKDIR /app
 
 # package.jsonとpackage-lock.jsonをコピー
@@ -21,6 +17,9 @@ COPY package*.json ./
 
 # 依存関係をインストール
 RUN npm ci --only=production
+
+# Playwrightブラウザをインストール
+RUN npx playwright install chromium
 
 # アプリケーションコードをコピー
 COPY . .
