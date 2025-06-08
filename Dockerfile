@@ -1,5 +1,5 @@
-# Playwright公式のベースイメージを使用（最新安定版）
-FROM mcr.microsoft.com/playwright:v1.48.0-jammy
+# Playwright公式のベースイメージを使用（最新版）
+FROM mcr.microsoft.com/playwright:v1.52.0-jammy
 
 # Node.jsとnpmは既にインストール済み
 WORKDIR /app
