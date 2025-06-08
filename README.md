@@ -1,129 +1,111 @@
 # Playwright Gemini API
 
-PlaywrightでGeminiを自動化するVercel APIエンドポイント
+PlaywrightでGeminiを自動化するクラウドAPIエンドポイント
 
-## 概要
+## 🚀 デプロイ済みAPI
 
-このプロジェクトは、Google Geminiに自動でアクセスし、プロンプトを送信して回答を取得するAPIです。VercelのServerless Functionsを使用して無料でデプロイできます。
+**Live API URL**: https://mundane-beetle-production.up.railway.app
 
-## 機能
+## 📡 API エンドポイント
 
-- HTTP POST リクエストでプロンプトを送信
-- Geminiからの回答を自動取得
-- JSON形式でレスポンス返却
-- CORS対応
-- エラーハンドリング
+### ヘルスチェック
+```
+GET /
+```
 
-## セットアップ
+### Gemini自動化
+```
+POST /api/gemini-automation
+```
 
-### 1. 依存関係のインストール
+## 💻 使用例
 
 ```bash
-npm install
-```
+# ヘルスチェック
+curl https://mundane-beetle-production.up.railway.app/
 
-### 2. ローカル開発環境での実行
-
-```bash
-npm run dev
-```
-
-### 3. Vercelへのデプロイ
-
-#### 初回デプロイ
-1. Vercelアカウントを作成
-2. VercelCLIをインストール:
-   ```bash
-   npm install -g vercel
-   ```
-3. ログイン:
-   ```bash
-   vercel login
-   ```
-4. デプロイ:
-   ```bash
-   npm run deploy
-   ```
-
-#### 更新デプロイ
-```bash
-vercel
-```
-
-## API使用方法
-
-### エンドポイント
-```
-POST https://your-app.vercel.app/api/gemini-automation
-```
-
-### リクエスト形式
-
-```bash
-curl -X POST https://your-app.vercel.app/api/gemini-automation \
+# Geminiに質問
+curl -X POST https://mundane-beetle-production.up.railway.app/api/gemini-automation \
   -H "Content-Type: application/json" \
-  -d '{"prompt": "こんにちは、今日の天気はどうですか？"}'
+  -d '{"prompt": "今日の天気はどうですか？"}'
 ```
 
-### レスポンス形式
-
-#### 成功時
+### レスポンス例
 ```json
 {
   "success": true,
-  "prompt": "こんにちは、今日の天気はどうですか？",
+  "prompt": "今日の天気はどうですか？",
   "response": "Geminiからの回答テキスト",
-  "timestamp": "2024-01-01T12:00:00.000Z"
+  "timestamp": "2025-06-08T15:07:51.813Z"
 }
 ```
 
-#### エラー時
-```json
-{
-  "success": false,
-  "error": "エラータイプ",
-  "message": "エラーメッセージ",
-  "details": "詳細なエラー情報"
-}
+## 🛠️ ローカル開発
+
+```bash
+# 依存関係をインストール
+npm install
+
+# サーバーを起動
+npm start
+
+# ローカルでテスト
+curl -X POST http://localhost:3000/api/gemini-automation \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "こんにちは"}'
 ```
 
-## 制限事項
+## 🐳 デプロイ
+
+### Railway CLI
+```bash
+# Railway CLIでデプロイ
+railway login
+railway init
+railway up
+```
+
+### 手動デプロイ
+1. GitHubリポジトリにpush
+2. Railway.app でリポジトリを接続
+3. 自動でDockerfileを検出してデプロイ
+
+## 📝 制限事項
 
 - プロンプトは1000文字以内
 - POSTメソッドのみ対応
-- 実行時間は30秒以内（Vercel制限）
 - Geminiサイトの仕様変更により動作しなくなる可能性があります
 
-## トラブルシューティング
-
-### よくある問題
-
-1. **Geminiサイトの要素が見つからない**
-   - サイトのUIが変更された可能性があります
-   - セレクタを更新してください
-
-2. **タイムアウトエラー**
-   - ネットワークが遅い場合があります
-   - 待機時間を調整してください
-
-3. **クリップボードアクセスエラー**
-   - ブラウザの権限設定を確認してください
-
-## ファイル構成
-
-```
-.
-├── api/
-│   └── gemini-automation.js  # メインAPI関数
-├── index.js                  # ローカル実行用（元のファイル）
-├── package.json              # 依存関係とスクリプト
-├── vercel.json              # Vercel設定
-└── README.md                # このファイル
-```
-
-## 注意事項
+## ⚠️ 注意事項
 
 - このツールは教育・研究目的で作成されています
 - Geminiの利用規約を遵守してください
 - 大量のリクエストは避けてください
 - 個人情報や機密情報は送信しないでください
+
+## 📁 ファイル構成
+
+```
+.
+├── server.js              # Express API サーバー
+├── Dockerfile             # Docker設定
+├── package.json           # 依存関係
+├── .gitignore             # Git除外設定
+└── README.md              # このファイル
+```
+
+## 🔧 技術仕様
+
+- **フレームワーク**: Express.js
+- **ブラウザ自動化**: Playwright (Chromium)
+- **デプロイ**: Railway (Docker)
+- **Node.js**: v18
+- **OS**: Ubuntu Slim
+
+## 📞 サポート
+
+問題が発生した場合は、GitHubのIssuesで報告してください。
+
+---
+
+**GitHub Repository**: https://github.com/FY034292/playwright-gemini-api
