@@ -57,7 +57,13 @@ curl -X POST http://localhost:3000/api/gemini-automation \
 
 ## 🐳 デプロイ
 
-### Railway CLI
+### 簡単デプロイ
+```bash
+# 一発でデプロイ
+npm run deploy
+```
+
+### 手動デプロイ
 ```bash
 # Railway CLIでデプロイ
 railway login
@@ -65,7 +71,7 @@ railway init
 railway up
 ```
 
-### 手動デプロイ
+### 初回セットアップ
 1. GitHubリポジトリにpush
 2. Railway.app でリポジトリを接続
 3. 自動でDockerfileを検出してデプロイ
