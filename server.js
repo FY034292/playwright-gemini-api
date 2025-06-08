@@ -70,7 +70,16 @@ async function runGeminiAutomation(prompt) {
         // 応答を待つ
         await page.waitForTimeout(5000);
 
-        await page.locator('[data-test-id="more-menu-button"]').click();
+        // 最新の回答の「その他」ボタンを特定（最後の要素を選択）
+        const moreButtons = page.locator('[data-test-id="more-menu-button"]');
+        const buttonCount = await moreButtons.count();
+
+        if (buttonCount === 0) {
+            throw new Error('「その他」ボタンが見つかりません');
+        }
+
+        // 最後（最新）の「その他」ボタンをクリック
+        await moreButtons.nth(buttonCount - 1).click();
         await page.locator('[data-test-id="copy-button"]').click();
         const copiedText = await page.evaluate(() => navigator.clipboard.readText());
 
