@@ -9,6 +9,11 @@ let browser = null;
 let page = null;
 let isInitialized = false;
 
+// アイドルタイムアウト設定（5分）
+const IDLE_TIMEOUT = 5 * 60 * 1000; // 5分
+let lastRequestTime = Date.now();
+let idleTimer = null;
+
 app.use(express.json());
 
 // CORS設定
@@ -23,6 +28,20 @@ app.use((req, res, next) => {
 
     next();
 });
+
+// アイドルタイマーのリセット
+function resetIdleTimer() {
+    lastRequestTime = Date.now();
+
+    if (idleTimer) {
+        clearTimeout(idleTimer);
+    }
+
+    idleTimer = setTimeout(async () => {
+        console.log('アイドルタイムアウト（5分）: ブラウザを閉じます');
+        await closeBrowser();
+    }, IDLE_TIMEOUT);
+}
 
 async function initializeBrowser() {
     if (isInitialized && browser && page) {
@@ -140,6 +159,8 @@ app.get('/', (req, res) => {
 
 // メインAPIエンドポイント
 app.post('/api/gemini-automation', async (req, res) => {
+    resetIdleTimer(); // リクエスト時にタイマーリセット
+
     try {
         const { prompt } = req.body;
 
