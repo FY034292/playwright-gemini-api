@@ -1,5 +1,5 @@
-# Playwright公式のベースイメージを使用（推奨）
-FROM mcr.microsoft.com/playwright:v1.52.0-jammy
+# Playwright公式のベースイメージを使用（最新安定版）
+FROM mcr.microsoft.com/playwright:v1.48.0-jammy
 
 # Node.jsとnpmは既にインストール済み
 WORKDIR /app
@@ -7,8 +7,8 @@ WORKDIR /app
 # package.jsonとpackage-lock.jsonをコピー
 COPY package*.json ./
 
-# 依存関係をインストール
-RUN npm ci --only=production
+# 依存関係をインストール（キャッシュクリア）
+RUN npm ci --only=production && npm cache clean --force
 
 # アプリケーションコードをコピー
 COPY . .
