@@ -66,10 +66,8 @@ EXPOSE 3000
 RUN groupadd -r playwright && useradd -r -g playwright -G audio,video playwright \
     && mkdir -p /home/playwright/Downloads \
     && chown -R playwright:playwright /home/playwright \
-    && chown -R playwright:playwright /app
-
-# playwrightユーザーに切り替え
-USER playwright
+    && chown -R playwright:playwright /app \
+    && chown -R playwright:playwright /root/.cache
 
 # アプリケーションを起動
 CMD ["node", "server.js"]
